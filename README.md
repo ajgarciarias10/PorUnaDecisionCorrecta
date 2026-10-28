@@ -7,6 +7,7 @@ Web educativa y neutral para entender las propuestas políticas antes de votar. 
 - `termometro.html` — 24 dilemas en 12 ejes económicos y de valores, con lados sorteados
 - `comparar.html` — fichas resumidas de los programas andaluces 2026 — datos en `datos.js`
 - `programas.html` — citas literales de los programas de las generales del 29N — datos en `programas.js` (instrucciones dentro)
+- `pulso.html` — Pulso ciudadano: serie del CIS (`data/cis.js`), respuestas de la web (`data/web.js`) y datos comprobables (`data/fichas.js`)
 - `aprender.html` — ejercicios de verificación
 - `fuentes.html` — metodología, criterios de neutralidad, privacidad y fuentes
 - `recogida/` — receptor anónimo opcional en Google Sheets (instrucciones en `recogida/LEEME.md`)

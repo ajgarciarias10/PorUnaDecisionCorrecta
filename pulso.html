@@ -1,0 +1,122 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Qué problemas señala la población en el barómetro del CIS, qué prioridades eligen quienes usan esta web y fichas de datos comprobables con su fuente."><title>Pulso ciudadano · Brújula Cívica</title><link rel="stylesheet" href="estilos.css"></head><body><div id="cabecera"></div><main id="contenido"><section class="page-head"><div class="container"><p class="eyebrow">Pulso ciudadano</p><h1>Qué preocupa, medido y con fuente.</h1><p class="lead">Tres miradas distintas que no deben confundirse: una encuesta oficial con muestra representativa, las respuestas voluntarias de quienes usan esta web y datos públicos verificables.</p><div class="topiclinks" aria-label="Secciones de la página"><a href="#cis">1 · Qué preocupa en España</a><a href="#web">2 · Qué preocupa a quien usa esta web</a><a href="#fichas">3 · Datos comprobables</a></div></div></section>
+<section class="section tight" id="cis"><div class="container"><div class="band"><p class="eyebrow">Encuesta oficial</p><h2>Qué preocupa en España</h2><div id="cis-cuerpo"></div></div></div></section>
+<section class="section tight" id="web"><div class="container"><div class="band"><p class="eyebrow">Respuestas voluntarias</p><h2>Qué preocupa a quien usa esta web</h2><div id="web-cuerpo"></div></div></div></section>
+<section class="section" id="fichas"><div class="container"><p class="eyebrow">Para contrastar</p><h2>Datos comprobables</h2><p class="muted readable">Cada ficha recoge una o varias cifras con su fecha, la cita literal de la fuente, cómo se obtuvo el dato y lo que ese dato no permite concluir.</p><div id="fichas-cuerpo"></div></div></section></main><div id="pie"></div><script src="datos.js"></script><script src="data/cis.js"></script><script src="data/fichas.js"></script><script src="data/web.js"></script><script src="comun.js"></script><script>
+(function(){
+const $=s=>document.querySelector(s);
+const enPreparacion=(que)=>`<div class="blank"><strong>Datos en preparación.</strong> <span class="muted">${esc(que)}</span></div>`;
+const url=u=>/^https?:\/\//i.test(String(u||''))?esc(u):'#';
+const idTema=t=>/^[a-z0-9_-]+$/i.test(String(t||''))?String(t):'';
+const temas=typeof DATOS!=='undefined'&&Array.isArray(DATOS.temas)?DATOS.temas:[];
+const nombreTema=id=>(temas.find(t=>t.id===id)||{}).label||id;
+const pct=v=>Number(v).toLocaleString('es-ES',{maximumFractionDigits:1});
+const MESES=['ene.','feb.','mar.','abr.','may.','jun.','jul.','ago.','sep.','oct.','nov.','dic.'];
+const mes=m=>{const r=/^(\d{4})-(\d{2})$/.exec(m||'');return r?`${MESES[+r[2]-1]||r[2]} ${r[1]}`:String(m||'')};
+const fichas=typeof FICHAS!=='undefined'&&Array.isArray(FICHAS)?FICHAS:null;
+const cis=typeof CIS!=='undefined'&&CIS&&Array.isArray(CIS.meses)&&Array.isArray(CIS.series)&&CIS.meses.length?CIS:null;
+const barras=(filas,max,etiqueta)=>`<ol class="pulso-barras">${filas.map(f=>`<li><span class="pb-nombre">${f.nombre}</span><span class="pb-pista" aria-hidden="true"><span style="width:${max>0?Math.max(1,f.valor/max*100).toFixed(1):0}%"></span></span><span class="pb-valor">${esc(etiqueta(f.valor))}</span></li>`).join('')}</ol>`;
+
+/* 1 · Barómetro del CIS */
+const SERIE_COLORES=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300'];
+const MARCAS=['circulo','cuadrado','triangulo','rombo','circulo','cuadrado'];
+const MAX_SEL=SERIE_COLORES.length;
+let seleccion=[];/* [{i: índice de serie, c: color fijo}] */
+function pintaCIS(){
+ const cont=$('#cis-cuerpo');
+ if(!cis){cont.innerHTML=enPreparacion('Aquí se mostrará la evolución de los problemas que la población señala en el barómetro mensual del CIS.');return}
+ const M=cis.meses,S=cis.series.filter(s=>s&&Array.isArray(s.valores));
+ const num=v=>typeof v==='number'&&isFinite(v);
+ let ult=M.length-1;while(ult>0&&!S.some(s=>num(s.valores[ult])))ult--;
+ const orden=S.map((s,i)=>({s,i,v:s.valores[ult]})).filter(x=>num(x.v)).sort((a,b)=>b.v-a.v);
+ seleccion=orden.slice(0,5).map((x,k)=>({i:S.indexOf(x.s),c:SERIE_COLORES[k]}));
+ const unidad=cis.unidad||'%';
+ const fuentes=cis.fuentes&&typeof cis.fuentes==='object'?cis.fuentes:{};
+ const conFicha=new Set((fichas||[]).map(f=>f&&f.tema));
+ const filas=orden.map(x=>{const t=idTema(x.s.tema);return{valor:x.v,nombre:`${esc(x.s.categoria)}${t?` <a class="small" href="temas.html#${t}">guía</a>`:''}${t&&conFicha.has(x.s.tema)?` · <a class="small" href="#ficha-tema-${t}">datos</a>`:''}`}});
+ cont.innerHTML=`${cis.pregunta?`<p class="aside-quote">«${esc(cis.pregunta)}»</p>`:''}<p class="small muted">Unidad: ${esc(unidad)}${cis.actualizado?` · Actualizado: ${esc(cis.actualizado)}`:''}</p><div class="strip warning"><strong>Pregunta multirrespuesta:</strong> cada persona puede mencionar varios problemas, por eso los porcentajes no suman 100. Mide qué se menciona, no la gravedad de cada problema.</div>
+ <h3>Ranking de ${esc(mes(M[ult]))}</h3>${orden.length?barras(filas,orden[0].v,v=>`${pct(v)} %`):'<p class="muted">No hay valores para este mes.</p>'}
+ <h3 style="margin-top:28px">Evolución mensual</h3><fieldset class="party-pick"><legend>Categorías (hasta ${MAX_SEL})</legend><div id="cis-sel" class="pulso-sel"></div></fieldset><p id="cis-aviso" class="small muted" aria-live="polite"></p><div id="cis-leyenda" class="pulso-leyenda"></div><div class="pulso-grafico" id="cis-grafico"></div><p class="footnote">Los huecos en una línea indican meses sin dato publicado para esa categoría.</p>
+ <details><summary>Ver los datos en tabla</summary><div class="pulso-tabla-wrap" tabindex="0" role="region" aria-label="Tabla de datos del barómetro"><table class="pulso-tabla"><caption class="small muted">${esc(cis.pregunta||'Barómetro del CIS')} (${esc(unidad)})</caption><thead><tr><th scope="col">Categoría</th>${M.map(m=>`<th scope="col">${esc(mes(m))}</th>`).join('')}</tr></thead><tbody>${S.map(s=>`<tr><th scope="row">${esc(s.categoria)}</th>${M.map((m,j)=>`<td>${num(s.valores[j])?esc(pct(s.valores[j])):'—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>
+ ${M.some(m=>url(fuentes[m])!=='#')?`<p class="small">Fuente de cada mes: ${M.filter(m=>url(fuentes[m])!=='#').map(m=>`<a href="${url(fuentes[m])}" target="_blank" rel="noopener noreferrer">${esc(mes(m))} ↗</a>`).join(' · ')}</p>`:''}${cis.notas?`<p class="footnote">${esc(cis.notas)}</p>`:''}`;
+ const sel=$('#cis-sel');
+ sel.innerHTML=S.map((s,i)=>`<label><input type="checkbox" value="${i}"> ${esc(s.categoria)}</label>`).join('');
+ const sincroniza=()=>sel.querySelectorAll('input').forEach(x=>{x.checked=seleccion.some(o=>o.i===+x.value)});
+ sel.addEventListener('change',e=>{const i=+e.target.value;
+  if(e.target.checked){if(seleccion.length>=MAX_SEL){e.target.checked=false;$('#cis-aviso').textContent=`Puedes comparar hasta ${MAX_SEL} categorías a la vez. Desmarca una para añadir otra.`;return}
+   const libre=SERIE_COLORES.find(c=>!seleccion.some(o=>o.c===c));seleccion.push({i,c:libre})}
+  else seleccion=seleccion.filter(o=>o.i!==i);
+  $('#cis-aviso').textContent='';dibuja()});
+ sincroniza();
+ const dibuja=()=>dibujaLineas(M,S,unidad);dibuja();
+ let ancho=0;addEventListener('resize',()=>{const w=$('#cis-grafico').clientWidth;if(w!==ancho){ancho=w;dibuja()}});
+}
+function marca(tipo,x,y,c){const r=4.5;
+ if(tipo==='cuadrado')return`<rect x="${x-r}" y="${y-r}" width="${2*r}" height="${2*r}" rx="1.5" fill="${c}" stroke="#fff" stroke-width="2"/>`;
+ if(tipo==='triangulo')return`<path d="M${x} ${y-r-1}L${x+r+1} ${y+r}L${x-r-1} ${y+r}Z" fill="${c}" stroke="#fff" stroke-width="2"/>`;
+ if(tipo==='rombo')return`<path d="M${x} ${y-r-1}L${x+r+1} ${y}L${x} ${y+r+1}L${x-r-1} ${y}Z" fill="${c}" stroke="#fff" stroke-width="2"/>`;
+ return`<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="#fff" stroke-width="2"/>`}
+function dibujaLineas(M,S,unidad){
+ const g=$('#cis-grafico'),ley=$('#cis-leyenda');
+ const num=v=>typeof v==='number'&&isFinite(v);
+ const tipoDe=o=>MARCAS[SERIE_COLORES.indexOf(o.c)];
+ ley.innerHTML=seleccion.map(o=>`<span><svg width="26" height="14" aria-hidden="true"><line x1="1" y1="7" x2="25" y2="7" stroke="${o.c}" stroke-width="2"/>${marca(tipoDe(o),13,7,o.c)}</svg>${esc(S[o.i].categoria)}</span>`).join('');
+ if(!seleccion.length){g.innerHTML='<p class="muted small">Selecciona al menos una categoría para ver su evolución.</p>';return}
+ const W=Math.max(280,g.clientWidth||600),H=W<500?240:300,ml=38,mr=14,mt=12,mb=30,iw=W-ml-mr,ih=H-mt-mb;
+ let max=0;seleccion.forEach(o=>S[o.i].valores.forEach(v=>{if(num(v)&&v>max)max=v}));
+ const paso=max<=10?2:max<=25?5:max<=60?10:20;const top=Math.max(paso,Math.ceil(max/paso)*paso);
+ const X=j=>ml+(M.length===1?iw/2:j*iw/(M.length-1)),Y=v=>mt+ih-v/top*ih;
+ let svg=`<svg class="pulso-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución mensual de ${esc(seleccion.map(o=>S[o.i].categoria).join(', '))}. Los valores exactos están en la tabla."><g class="ejes">`;
+ for(let v=0;v<=top;v+=paso)svg+=`<line x1="${ml}" x2="${W-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v?'#e6eeea':'#b9cdc5'}"/><text x="${ml-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`;
+ const salto=Math.ceil(M.length/Math.max(2,Math.floor(iw/62)));
+ const ultimo=M.length-1;
+ const AE=58,ext=j=>{const a=ultimo===0?'middle':j===ultimo?'end':j===0?'start':'middle',x=X(j);return{a,x0:a==='start'?x:a==='end'?x-AE:x-AE/2,x1:a==='start'?x+AE:a==='end'?x:x+AE/2}};
+ const limite=ext(ultimo).x0-8;let prev=-Infinity;
+ M.forEach((m,j)=>{const e=ext(j);if(j===ultimo||j%salto===0&&e.x0>=prev+8&&e.x1<=limite){svg+=`<text x="${X(j)}" y="${H-9}" text-anchor="${e.a}">${esc(mes(m))}</text>`;prev=e.x1}});
+ svg+=`</g><line id="cis-cruz" x1="0" x2="0" y1="${mt}" y2="${mt+ih}" stroke="#7d918a" stroke-dasharray="3 3" visibility="hidden"/>`;
+ seleccion.forEach(o=>{const vs=S[o.i].valores;let d='',dentro=false;
+  M.forEach((m,j)=>{const v=vs[j];if(num(v)){d+=`${dentro?'L':'M'}${X(j).toFixed(1)} ${Y(v).toFixed(1)}`;dentro=true}else dentro=false});
+  svg+=`<path d="${d}" fill="none" stroke="${o.c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  M.forEach((m,j)=>{const v=vs[j];const aislado=num(v)&&!num(vs[j-1])&&!num(vs[j+1]);if(num(v)&&(j===M.length-1||aislado||M.length<=12))svg+=marca(tipoDe(o),X(j),Y(v),o.c)})});
+ svg+=`<rect x="${ml}" y="${mt}" width="${iw}" height="${ih}" fill="transparent" id="cis-zona"/></svg><div class="pulso-tip" id="cis-tip" hidden></div>`;
+ g.innerHTML=svg;
+ const zona=$('#cis-zona'),tip=$('#cis-tip'),cruz=$('#cis-cruz');
+ const mueve=e=>{const r=zona.getBoundingClientRect();const px=(e.clientX-r.left)/r.width*iw;const j=Math.max(0,Math.min(M.length-1,Math.round(M.length===1?0:px/iw*(M.length-1))));
+  cruz.setAttribute('x1',X(j));cruz.setAttribute('x2',X(j));cruz.setAttribute('visibility','visible');
+  const filas=seleccion.map(o=>({o,v:S[o.i].valores[j]})).sort((a,b)=>(num(b.v)?b.v:-1)-(num(a.v)?a.v:-1));
+  tip.innerHTML=`<strong>${esc(mes(M[j]))}</strong>${filas.map(f=>`<span><i style="background:${f.o.c}"></i>${esc(S[f.o.i].categoria)}: <b>${num(f.v)?esc(pct(f.v)+' '+unidad):'sin dato'}</b></span>`).join('')}`;
+  tip.hidden=false;const tw=tip.offsetWidth;let left=X(j)+12;if(left+tw>W)left=X(j)-12-tw;tip.style.left=Math.max(0,left)+'px';tip.style.top=mt+'px'};
+ zona.addEventListener('pointermove',mueve);zona.addEventListener('pointerdown',mueve);
+ zona.addEventListener('pointerleave',()=>{tip.hidden=true;cruz.setAttribute('visibility','hidden')});
+}
+
+/* 2 · Respuestas de la web */
+const PERFILES={ciudadania:'Ciudadanía en general',empresa:'Empresario/a',autonomo:'Autónomo/a',trabajo:'Trabajador/a',estudios:'Estudiante',mayores:'Persona mayor / jubilada',familia:'Cuidado de familia',otro:'Otra'};
+function pintaWeb(){
+ const cont=$('#web-cuerpo');
+ const aviso='<p class="footnote"><strong>Cuidado al interpretar:</strong> la muestra es <strong>autoseleccionada</strong>: solo responde quien llega a esta web, completa el termómetro y decide enviar sus respuestas. No representa a la población española ni permite comparar con el CIS. Ver <a href="fuentes.html#privacidad">cómo tratamos estos datos</a>.</p>';
+ if(typeof WEB==='undefined'||!WEB||typeof WEB!=='object'){cont.innerHTML=enPreparacion('Aquí se publicarán, de forma agregada, las prioridades elegidas en el termómetro por quienes acepten enviarlas.')+aviso;return}
+ const n=Number(WEB.n)||0;
+ if(n<100){cont.innerHTML=`<div class="blank"><strong>Aún no hay respuestas suficientes para publicar resultados (mínimo 100).</strong><p class="small muted" style="margin-bottom:0">Respuestas recibidas: ${esc(n)}. Al terminar el <a href="termometro.html">termómetro</a> puedes enviar de forma anónima tus tres temas prioritarios.</p></div>${aviso}`;return}
+ const aFilas=(obj,nombre)=>Object.entries(obj&&typeof obj==='object'?obj:{}).map(([k,v])=>({k,v:Number(v)})).filter(x=>isFinite(x.v)&&x.v>=10).sort((a,b)=>b.v-a.v).map(x=>({valor:x.v/n*100,nombre:esc(nombre(x.k))}));
+ const prio=aFilas(WEB.prioridades,nombreTema),perf=aFilas(WEB.perfiles,k=>PERFILES[k]||k);
+ cont.innerHTML=`<p class="small muted">${esc(n.toLocaleString('es-ES'))} respuestas${WEB.actualizado?` · Actualizado: ${esc(WEB.actualizado)}`:''}</p><div class="strip warning">Cada persona elige hasta 3 temas, por eso los porcentajes no suman 100. No se muestran grupos de menos de 10 personas.</div><h3>Temas elegidos como prioritarios</h3>${prio.length?barras(prio,prio[0].valor,v=>`${pct(v)} %`):'<p class="muted">Sin datos publicables.</p>'}${perf.length?`<details><summary>Situación declarada de quienes respondieron</summary>${barras(perf,perf[0].valor,v=>`${pct(v)} %`)}<p class="small muted">Porcentaje sobre el total de respuestas; el resto prefirió no decirlo o pertenece a grupos de menos de 10 personas.</p></details>`:''}${aviso}`;
+}
+
+/* 3 · Fichas de datos */
+function pintaFichas(){
+ const cont=$('#fichas-cuerpo');
+ if(!fichas){cont.innerHTML=enPreparacion('Aquí se publicarán fichas con cifras oficiales, su método y sus límites.');return}
+ if(!fichas.length){cont.innerHTML='<p class="muted">Todavía no hay fichas publicadas.</p>';return}
+ const vistos=new Set();
+ cont.innerHTML=fichas.filter(f=>f&&typeof f==='object').map(f=>{
+  const t=idTema(f.tema);const ancla=t&&!vistos.has(t)?` id="ficha-tema-${t}"`:'';if(t)vistos.add(t);
+  const serie=cis&&t?cis.series.find(s=>s&&s.tema===f.tema):null;
+  let rel='';if(serie){const vs=serie.valores||[];let j=vs.length-1;while(j>=0&&!(typeof vs[j]==='number'&&isFinite(vs[j])))j--;
+   rel=`<p class="small">En el barómetro del CIS: <a href="#cis">${esc(serie.categoria)}</a>${j>=0?`, ${esc(pct(vs[j]))} ${esc(cis.unidad||'%')} en ${esc(mes(cis.meses[j]))}`:''}.</p>`}
+  const cifras=Array.isArray(f.cifras)?f.cifras:[],fu=Array.isArray(f.fuentes)?f.fuentes:[],lec=Array.isArray(f.lecturas)?f.lecturas:[];
+  return`<article class="datos-box pulso-ficha"${ancla}><div class="row"><span class="mutedtag">${esc(t?nombreTema(t):'Sin tema')}</span>${f.fecha?`<span class="small muted">Dato de: ${esc(f.fecha)}</span>`:''}</div><h3 style="margin-top:10px"${f.id?` id="ficha-${esc(f.id)}"`:''}>${esc(f.titulo)}</h3>${cifras.length?`<div class="grid two">${cifras.map(c=>`<div><span class="kpi">${esc(c&&c[0])}<small>${esc(c&&c[1])}</small></span></div>`).join('')}</div>`:''}${f.cita?`<blockquote class="cita"><p>«${esc(f.cita)}»</p></blockquote>`:''}${f.metodo?`<p><strong>Cómo se mide:</strong> ${esc(f.metodo)}</p>`:''}${f.noDemuestra?`<p class="footnote"><strong>Lo que NO demuestra:</strong> ${esc(f.noDemuestra)}</p>`:''}${lec.length?`<details><summary>Cómo lo interpretan los distintos enfoques</summary><ul>${lec.map(l=>`<li>${esc(l)}</li>`).join('')}</ul><p class="small muted">Los mismos datos admiten lecturas distintas; esta web no toma partido.</p></details>`:''}${rel}${fu.length?`<p class="small">Fuentes: ${fu.map(x=>`<a href="${url(x&&x[1])}" target="_blank" rel="noopener noreferrer">${esc(x&&x[0])} ↗</a>`).join(' · ')}</p>`:''}${t?`<p class="small"><a href="temas.html#${t}">Entender el tema: ${esc(nombreTema(t))} →</a></p>`:''}</article>`}).join('');
+}
+
+pintaFichas();pintaCIS();pintaWeb();
+})();
+</script></body></html>

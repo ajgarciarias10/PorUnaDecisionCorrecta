@@ -17,3 +17,31 @@
 .cita{margin:12px 0;padding:10px 14px;border-left:3px solid var(--teal);background:#f5f8f6;border-radius:0 10px 10px 0}.cita p{margin:6px 0;color:var(--ink)}
 @media(max-width:650px){.nav{padding:13px 17px}}
 .datos-box{margin:18px 0;padding:20px;border:1px solid #f2e3bd;background:#fffaf0;border-radius:16px}.datos-box .kpi{font-size:1.7rem}.datos-box .grid.two{gap:14px;margin:10px 0 6px}
+
+/* Pulso ciudadano */
+.pulso-barras{list-style:none;padding:0;margin:12px 0 18px;display:grid;gap:9px}
+.pulso-barras li{display:grid;grid-template-columns:minmax(0,13rem) minmax(0,1fr) auto;gap:4px 12px;align-items:center;font-size:.9rem}
+.pb-nombre{min-width:0;overflow-wrap:anywhere}
+.pb-pista{height:12px;background:#e8f0ec;border-radius:0 6px 6px 0;overflow:hidden}
+.pb-pista span{display:block;height:100%;background:var(--teal);border-radius:0 4px 4px 0}
+.pb-valor{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pulso-sel{display:flex;flex-wrap:wrap;gap:6px 16px}
+.pulso-sel label{display:inline-flex;align-items:center;gap:7px;font-size:.9rem}
+.pulso-leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.86rem;margin:6px 0}
+.pulso-leyenda span{display:inline-flex;align-items:center;gap:6px}
+.pulso-grafico{position:relative;width:100%;margin:6px 0 4px}
+.pulso-svg{display:block;max-width:100%;height:auto;touch-action:pan-y}
+.pulso-svg .ejes text{font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.pulso-tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:8px 11px;font-size:.8rem;line-height:1.45;max-width:min(260px,90%);z-index:2}
+.pulso-tip span{display:block}
+.pulso-tip i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.pulso-tabla-wrap{overflow-x:auto;max-width:100%;margin-top:10px}
+.pulso-tabla{border-collapse:collapse;font-size:.84rem;font-variant-numeric:tabular-nums;min-width:100%}
+.pulso-tabla caption{text-align:left;padding-bottom:6px}
+.pulso-tabla th,.pulso-tabla td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.pulso-tabla th[scope=row],.pulso-tabla thead th:first-child{text-align:left;white-space:normal;min-width:9rem}
+.pulso-ficha{scroll-margin-top:105px}
+#cis,#web,#fichas{scroll-margin-top:90px}
+@media(max-width:650px){.pulso-barras li{grid-template-columns:minmax(0,1fr) auto}
+.pb-nombre{grid-column:1/-1}
+.pb-pista{grid-column:1}}
