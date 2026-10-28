@@ -14,5 +14,6 @@ Web estática y neutral para entender las propuestas políticas antes de votar (
 
 ## Cómo se trabaja con agentes
 - Los de pago (Claude, Codex con suscripción) deciden, escriben tickets en `tickets/` y revisan. TypeSafe elige el agente según su cuota: `python3 tool/despachar.py tickets/<t>.md --nivel bounded|top --run <run_id>`.
+- Infraestructura completa (Orca, TypeSafe, OmniRoute, límites, privacidad) en `INFRAESTRUCTURA.md`.
 - Orca orquesta (`orca skills get orchestration`). OmniRoute (127.0.0.1:20128) controla el gasto: `omniroute-ctl estado|gasto|mcp|repo`. En este repo OmniRoute está encendido (marca `.git/omniroute`, vale para todos los worktrees): Codex y Claude pasan por él (en esas sesiones no cargan los conectores de claude.ai).
 - Herramientas MCP de OmniRoute para ahorrar: `omniroute_ccr_store`/`ccr_retrieve` para PDFs y logs grandes; `omniroute_route_request` para delegar trabajo mecánico a modelos gratuitos (nunca con datos de ciudadanos).

@@ -20,7 +20,7 @@ Contexto para agentes en `AGENTS.md` (Claude lo carga desde `CLAUDE.md`).
 
 - **Los de pago deciden** (Claude y Codex con suscripción): planifican, escriben los tickets y revisan. TypeSafe elige cuál según su cuota real.
 - **Orca** lanza y vigila a los agentes; **OmniRoute** (`127.0.0.1:20128`, solo local) controla el gasto, comprime y hace de respaldo.
-- En este repo OmniRoute está **encendido** (`omniroute-ctl repo on`): los Codex que se abren aquí pasan por él.
+- En este repo OmniRoute está **encendido** (`omniroute-ctl repo on`): los Codex y Claude que se abren aquí pasan por él. Detalle en `INFRAESTRUCTURA.md`.
 - Un ticket que toque datos de ciudadanos (`data/web.js`, `recogida/`, `.csv`) nunca va a modelos gratuitos.
 
 ```
