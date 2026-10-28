@@ -13,3 +13,17 @@ Web educativa y neutral para entender las propuestas políticas antes de votar. 
 - `recogida/` — receptor anónimo opcional en Google Sheets (instrucciones en `recogida/LEEME.md`)
 
 Sitio estático: se abre con cualquier navegador o desde GitHub Pages.
+
+## Cómo trabajan los agentes en este repo
+
+- **Orca** gestiona los agentes: tareas, workers y su `worker_done`.
+- **TypeSafe** (servicio del servidor) decide qué agente hace cada ticket según su cuota real: tareas `bounded` → OpenCode; tareas `top` → Claude o Codex; Antigravity si los demás se quedan sin cuota.
+- **OmniRoute** (`127.0.0.1:20128`, solo local) abarata las llamadas a modelos de los agentes conectados a él.
+
+Para lanzar un ticket de `tickets/` con el agente que elija TypeSafe:
+
+```
+python3 tool/despachar.py tickets/<ticket>.md --nivel bounded --run <run_id> [--simular]
+```
+
+El ticket necesita `# Título`, `Terminado cuando:` y `Ficheros en propiedad:` con las rutas entre comillas invertidas.
