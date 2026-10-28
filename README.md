@@ -16,14 +16,14 @@ Sitio estático: se abre con cualquier navegador o desde GitHub Pages.
 
 ## Cómo trabajan los agentes en este repo
 
-- **Orca** gestiona los agentes: tareas, workers y su `worker_done`.
-- **TypeSafe** (servicio del servidor) decide qué agente hace cada ticket según su cuota real: tareas `bounded` → OpenCode; tareas `top` → Claude o Codex; Antigravity si los demás se quedan sin cuota.
-- **OmniRoute** (`127.0.0.1:20128`, solo local) abarata las llamadas a modelos de los agentes conectados a él.
-
-Para lanzar un ticket de `tickets/` con el agente que elija TypeSafe:
+- **Los de pago deciden** (Claude y Codex con suscripción): planifican, escriben los tickets y revisan. TypeSafe elige cuál según su cuota real.
+- **Los obreros trabajan gratis**: `codex-obrero` es Codex sin sesión de ChatGPT, conectado solo al combo «obreros» de OmniRoute (modelos gratuitos). Hacen los tickets `bounded`.
+- **Orca** lanza y vigila a todos; **OmniRoute** (`127.0.0.1:20128`, solo local) controla el gasto y comprime.
+- Un ticket que toque datos de ciudadanos (`data/web.js`, `recogida/`, `.csv`) nunca va a modelos gratuitos.
 
 ```
-python3 tool/despachar.py tickets/<ticket>.md --nivel bounded --run <run_id> [--simular]
+python3 tool/despachar.py tickets/<ticket>.md --nivel bounded --run <run_id>   # obrero gratuito
+python3 tool/despachar.py tickets/<ticket>.md --nivel top --run <run_id>       # agente de pago
 ```
 
 El ticket necesita `# Título`, `Terminado cuando:` y `Ficheros en propiedad:` con las rutas entre comillas invertidas.
