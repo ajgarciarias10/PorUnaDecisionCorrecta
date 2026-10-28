@@ -4,12 +4,12 @@
 Reparto de papeles:
 - Los agentes de PAGO (Claude, Codex con suscripción) deciden: planifican, escriben el ticket y
   revisan lo que entregan los obreros. TypeSafe elige cuál según su cuota real.
-- Los OBREROS trabajan con modelos gratuitos: `codex-obrero` (Codex sin sesión de ChatGPT) habla
-  solo con el combo «obreros» de OmniRoute. Hacen los tickets `bounded`.
+- Los OBREROS trabajarán con el combo «obreros» de OmniRoute (modelos gratuitos) cuando haya
+  claves gratuitas; hasta entonces los `bounded` también los elige TypeSafe.
 - Orca EJECUTA: crea la tarea, lanza el worker y vigila su worker_done.
 
-Un ticket `bounded` va al obrero salvo que toque datos de ciudadanos (los modelos gratuitos pueden
-entrenar con lo que reciben): entonces va a un agente de pago. Los `top` van siempre a pago.
+Un ticket que toque datos de ciudadanos va siempre a Claude o Codex de pago (los modelos gratuitos,
+también OpenCode Free Tier, pueden entrenar con lo que reciben).
 Si TypeSafe no responde o nadie está disponible, el script se detiene y lo dice.
 
 Formato del ticket (lo lee TypeSafe; las rutas DEBEN ir entre comillas invertidas):
@@ -20,8 +20,7 @@ Formato del ticket (lo lee TypeSafe; las rutas DEBEN ir entre comillas invertida
     - `ruta/del/fichero`
 
 Uso:
-    python3 tool/despachar.py tickets/mi-ticket.md --nivel bounded --run <run_id>     # obrero gratuito
-    python3 tool/despachar.py tickets/mi-ticket.md --nivel bounded --run <run_id> --pago
+    python3 tool/despachar.py tickets/mi-ticket.md --nivel bounded --run <run_id>
     python3 tool/despachar.py tickets/mi-ticket.md --nivel top --run <run_id> --simular
 """
 
@@ -50,30 +49,6 @@ def toca_datos_sensibles(ticket: Path) -> bool:
     return any(marca in texto for marca in SENSIBLES)
 
 
-def orca_json(orden: list) -> dict:
-    salida = subprocess.run(orden + ["--json"], capture_output=True, text=True)
-    if salida.returncode != 0:
-        sys.exit(f"Falló {' '.join(orden[:3])}:\n{salida.stdout}\n{salida.stderr}")
-    return json.loads(salida.stdout)
-
-
-def lanzar_obrero(ticket: Path, titulo: str, run: str, simular: bool) -> int:
-    """Abre un terminal con codex-obrero, espera a que esté listo y le asigna el ticket supervisado."""
-    if simular:
-        print("Se ejecutaría: orca terminal create --command codex-obrero → terminal wait --for tui-idle"
-              f" → orchestration worker-start --terminal <handle> --run {run}")
-        return 0
-    creado = orca_json(["orca", "terminal", "create", "--command", "codex-obrero", "--title", f"obrero · {titulo}"])
-    r = creado.get("result", creado)
-    handle = r.get("handle") or (r.get("terminal") or {}).get("handle")
-    if not handle:
-        sys.exit(f"No encuentro el handle del terminal creado: {creado}")
-    orca_json(["orca", "terminal", "wait", "--terminal", handle, "--for", "tui-idle", "--timeout-ms", "120000"])
-    return subprocess.run(["orca", "orchestration", "worker-start", "--spec", ticket.read_text(encoding="utf-8"),
-                           "--task-title", titulo, "--worktree", "current", "--terminal", handle,
-                           "--run", run, "--json"]).returncode
-
-
 def preguntar_typesafe(ticket: Path, nivel: str) -> dict:
     # TypeSafe solo conoce las áreas de CleverTracker; «docs» es la más cercana a esta web.
     orden = [sys.executable, str(PEDIR_AGENTE), "--ticket", str(ticket), "--base", "main",
@@ -94,7 +69,6 @@ def main() -> int:
                    help="top = tarea larga o delicada; bounded = cambio acotado")
     p.add_argument("--run", required=True, help="id del Run de Orca (orchestration run-create)")
     p.add_argument("--simular", action="store_true", help="muestra la orden sin lanzar nada")
-    p.add_argument("--pago", action="store_true", help="fuerza un agente de pago aunque el ticket sea bounded")
     a = p.parse_args()
 
     ticket = a.ticket.resolve()
@@ -107,9 +81,6 @@ def main() -> int:
         # OpenCode Free Tier (el único `bounded` de TypeSafe) también es gratuito: se pide nivel top.
         print("El ticket toca datos de ciudadanos: va a Claude o Codex de pago, nunca a un modelo gratuito.")
         nivel = "top"
-    elif nivel == "bounded" and not a.pago:
-        print("Obrero gratuito (codex-obrero → combo «obreros» de OmniRoute). Revisa el resultado un agente de pago.")
-        return lanzar_obrero(ticket, titulo, a.run, a.simular)
 
     decision = preguntar_typesafe(ticket, nivel)
     familia = decision.get("agent")
