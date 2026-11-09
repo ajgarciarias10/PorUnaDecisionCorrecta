@@ -17,3 +17,10 @@ Web estática y neutral para entender las propuestas políticas antes de votar (
 - Infraestructura completa (Orca, TypeSafe, OmniRoute, límites, privacidad) en `INFRAESTRUCTURA.md`.
 - Orca orquesta (`orca skills get orchestration`). OmniRoute (127.0.0.1:20128) controla el gasto: `omniroute-ctl estado|gasto|mcp|repo`. En este repo OmniRoute está encendido (marca `.git/omniroute`, vale para todos los worktrees): Codex y Claude pasan por él (en esas sesiones no cargan los conectores de claude.ai).
 - Herramientas MCP de OmniRoute para ahorrar: `omniroute_ccr_store`/`ccr_retrieve` para PDFs y logs grandes; `omniroute_route_request` para delegar trabajo mecánico a modelos gratuitos (nunca con datos de ciudadanos).
+
+## Método de trabajo (añadido el 09/11/2026)
+- Cada tarea no trivial tiene un ticket en `tickets/` con `Rama de trabajo:`, `Ficheros en propiedad:` (rutas entre comillas invertidas), `No tocar:` y `Terminado cuando:`. Plantilla: `docs/plantillas/ticket.md`. Sin `Rama de trabajo:` el guard no puede juzgar el ticket.
+- Cada agente trabaja en su propio worktree y su propia rama, y hace push solo de su rama. La comprobación es automática: `node tool/agent-guard.mjs --branch <rama> --base barracuda` (0: nadie se salió; 1: alguien sí; 2: no hay base fiable) y corre en CI.
+- **Ningún agente hace `git branch -f main` ni push de `main`**: publica el sitio y estamos en campaña. Lo hace el dueño.
+- Si se agota la cuota o el contexto, se commitea lo probado, se anota en `## Comentarios` del ticket qué falta y se para: el relevo entra en el mismo worktree. Pasos en `docs/agents/procedimiento.md`.
+
